@@ -26,7 +26,7 @@
 | 주차 | 내용 | 문서 | 상태 |
 |---|---|---|---|
 | W0 | 기초 정비 (회로·제어·확률 최소 세트) | [W0_foundations](docs/02_theory/W0_foundations.md) | ✅ |
-| W1-2 | 셀→회로 번역 (ECM, EIS) | [W1_electrochemistry_ecm](docs/02_theory/W1_electrochemistry_ecm.md) | 🔲 |
+| W1-2 | 셀→회로 번역 (ECM, EIS) | [W1_electrochemistry_ecm](docs/02_theory/W1_electrochemistry_ecm.md), [W2_eis](docs/02_theory/W2_eis.md) | ✅ (이론) / 🔲 (구현) |
 | W3 | 파라미터 식별 (HPPC, RLS) | [W3_parameter_identification](docs/02_theory/W3_parameter_identification.md) | 🔲 |
 | W4-5 | 상태추정 엔진 (EKF/UKF) + 검증 | [W4_kalman_filter](docs/02_theory/W4_kalman_filter.md) | 🔲 |
 | W6 | SOH (Dual EKF, ICA/DVA) | [W6_soh](docs/02_theory/W6_soh.md) | 🔲 |
