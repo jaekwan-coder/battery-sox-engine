@@ -1,0 +1,31 @@
+# 데이터 (용량이 크고 재다운로드 가능하므로 추적 안 함)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# 결과물 (재생성 가능한 대용량 그림/모델 파일)
+docs/03_results/*.png
+docs/03_results/*.pdf
+!docs/03_results/.gitkeep
+*.mat
+*.h5
+
+# OS / 에디터
+.DS_Store
+.vscode/
+.idea/
+
+# Simulink
+simulink/*.slxc
+simulink/slprj/
