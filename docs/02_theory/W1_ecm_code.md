@@ -86,7 +86,7 @@ HPPC 실험 데이터에서 R0, R1을 뽑는 코드(`hppc.py`, 아직 미작성)
    그대로 사용될 예정 (`f(x,u)`, `h(x,u)`에 해당)
 
 ### 아키텍처
-
+'''
 ECMParameters (dataclass)
 └─ R0, R1, C1, R2, C2, Q_Ah 저장, tau1/tau2 프로퍼티 제공
 
@@ -101,6 +101,7 @@ HysteresisModel (class)
 
 make_hppc_pulse_current() # 합성 HPPC 전류 생성 (M3.1)
 default_ocv_curve() / default_ocv_slope() # 합성 OCV + 해석적 야코비안
+'''
 
 # (실측 데이터로 교체 예정, M3.2)
 
