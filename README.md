@@ -28,9 +28,9 @@
 
 | 주차 | 내용 | 문서 | 이론 | 구현 |
 |---|---|---|---|---|
-| W0 | 기초 정비 (회로·제어·확률) | [W0_foundations](docs/02_theory/W0_foundations.md) | ✅ | 🔲 |
-| W1 | 전기화학 → 등가회로(ECM) | [W1_electrochemistry_ecm](docs/02_theory/W1_electrochemistry_ecm.md) | ✅ | 🔲 |
-| W2 | EIS와 나이퀴스트 선도 | [W2_eis](docs/02_theory/W2_eis.md) | ✅ | 🔲 |
+| W0 | 기초 정비 (회로·제어·확률) | [W0_foundations](docs/02_theory/W0_foundations.md) | ✅ | ✅ (검증 노트북) |
+| W1 | 전기화학 → 등가회로(ECM) | [W1_electrochemistry_ecm](docs/02_theory/W1_electrochemistry_ecm.md) | ✅ | ✅ ([ecm.py](src/models/ecm.py)) |
+| W2 | EIS와 나이퀴스트 선도 | [W2_eis](docs/02_theory/W2_eis.md) | ✅ | ✅ ([노트북](notebooks/00_rc_nyquist.ipynb)) |
 | W3 | 파라미터 식별 (HPPC, RLS) | [W3_parameter_identification](docs/02_theory/W3_parameter_identification.md) | ✅ | 🔲 |
 | W4-5 | 상태추정 (EKF/UKF) + 검증 | [W4_kalman_filter](docs/02_theory/W4_kalman_filter.md) | 🔲 | 🔲 |
 | W6 | SOH (Dual EKF, ICA/DVA) | [W6_soh](docs/02_theory/W6_soh.md) | 🔲 | 🔲 |
@@ -44,29 +44,96 @@ McMaster University(캐나다)에서 공개한 **LG 18650HG2** 및
 시험 블록별 목적, HPPC 포함 여부에 대한 주의사항은
 **[data/README.md](data/README.md)** 를 참고하세요.
 
-## 저장소 구조
+## 저장소 전체 구조
+
+처음 오셨다면 이 트리만 보고도 "뭐가 어디 있는지" 파악할 수 있게
+만들었습니다. `✅`는 지금 내용이 채워진 것, `🔲`는 폴더/틀만 만들어두고
+아직 내용이 비어있는 것입니다.
 
 ```
 battery-sox-engine/
-├── docs/
-│   ├── START_HERE.md           # 👈 여기부터
-│   ├── 00_learning_log.md      # 주차별 학습 기록 (막힌 지점 포함)
-│   ├── 01_decisions.md         # 설계 결정 로그 (D-001, D-002, ...)
-│   ├── 02_theory/              # 이론 문서 (W0~W8)
-│   ├── 03_results/             # 결과 그림 + 해석
-│   ├── 04_limitations.md       # 이 구현이 다루지 못하는 것
-│   └── 05_glossary.md          # 약어 풀이
-├── data/                       # 원본은 git 추적 안 함 (README에 다운로드 안내)
-├── src/
-│   ├── models/                 # ECM (1RC/2RC/히스테리시스)
-│   ├── identification/         # HPPC 피팅, RLS
-│   ├── estimators/             # KF/EKF/UKF/Dual EKF
-│   ├── validation/             # NIS, 백색성, 스트레스 테스트
-│   └── sop/                    # SOP 계산
-├── notebooks/                  # 탐색적 분석
-├── tests/                      # 단위 테스트
-└── simulink/                   # W8: MIL 검증용
+│
+├── README.md                    ✅ 지금 보고 있는 이 파일 (전체 안내)
+├── LICENSE                      ✅ 코드(MIT) / 문서(CC BY 4.0) 라이선스
+├── requirements.txt             ✅ 설치해야 할 파이썬 패키지 목록
+│
+├── docs/                        📖 "왜"를 설명하는 글 (코드 없음)
+│   ├── START_HERE.md            ✅ 처음 오면 여기부터 — 읽는 순서 안내
+│   ├── 00_learning_log.md       ✅ 주차별 학습 일지 (막힌 지점, 해결 과정)
+│   ├── 01_decisions.md          ✅ 설계 결정 로그 (D-001, D-002, D-003)
+│   ├── 04_limitations.md        ✅ 이 프로젝트가 다루지 못하는 것
+│   ├── 05_glossary.md           ✅ 약어 전체 풀이 (SOC, ECM, HPPC 등)
+│   │
+│   ├── 02_theory/               📖 주차별 이론 문서
+│   │   ├── W0_foundations.md              ✅ 회로·제어·확률 기초 8문항
+│   │   ├── W1_electrochemistry_ecm.md     ✅ 전기화학 → 등가회로(ECM)
+│   │   ├── W2_eis.md                      ✅ EIS와 나이퀴스트 선도
+│   │   ├── W3_parameter_identification.md ✅ 파라미터 식별(HPPC, RLS)
+│   │   ├── W4_kalman_filter.md            🔲 칼만필터 (목차만 있음)
+│   │   ├── W6_soh.md                      🔲 SOH (목차만 있음)
+│   │   ├── W7_sop.md                      🔲 SOP (목차만 있음)
+│   │   └── W8_productionization.md        🔲 제품화 (목차만 있음)
+│   │
+│   └── 03_results/              📊 결과 그림 저장 (지금은 안내문만)
+│       └── README.md            ✅ 그림 채워나갈 방식 설명
+│
+├── data/                        🗄️ 실험 데이터 (원본 파일은 안 올림)
+│   ├── README.md                ✅ 데이터셋 구조·출처·다운로드 방법
+│   ├── raw/                     🔲 원본 다운로드 위치 (비어있음, .gitkeep만)
+│   └── processed/               🔲 전처리 결과 저장 위치 (비어있음)
+│
+├── src/                         🔧 실제로 동작하는 코드
+│   ├── README.md                ✅ 이 폴더 전체의 설계 원칙 설명
+│   ├── __init__.py              ✅ (빈 파일, "여긴 파이썬 패키지"라는 표시만)
+│   │
+│   ├── models/                  ✅ 배터리를 회로로 표현하는 코드
+│   │   ├── README.md            ✅ 무엇을 담을 폴더인지 설명
+│   │   ├── __init__.py          ✅ (빈 파일)
+│   │   └── ecm.py               ✅ 2RC+히스테리시스 ECM 시뮬레이터 (완성)
+│   │
+│   ├── identification/          🔲 파라미터 뽑아내는 코드 — 다음 작업 대상
+│   │   ├── README.md            ✅ 계획 설명만 있음
+│   │   └── __init__.py          ✅ (빈 파일)
+│   │       # 앞으로 여기에 hppc.py, rls.py가 추가될 예정
+│   │
+│   ├── estimators/              🔲 실시간 SOC 추정 코드 (W4-5에서 작업)
+│   │   ├── README.md            ✅ 계획 설명만 있음
+│   │   └── __init__.py          ✅ (빈 파일)
+│   │
+│   ├── validation/               🔲 필터 검증 코드 (W4-5에서 작업)
+│   │   ├── README.md            ✅ 계획 설명만 있음
+│   │   └── __init__.py          ✅ (빈 파일)
+│   │
+│   └── sop/                     🔲 출력 한계 계산 코드 (W7에서 작업)
+│       ├── README.md            ✅ 계획 설명만 있음
+│       └── __init__.py          ✅ (빈 파일)
+│
+├── tests/                       🧪 src/ 코드가 맞는지 검사하는 코드
+│   ├── README.md                ✅ 테스트 작성 규칙 설명
+│   └── test_ecm.py              ✅ ecm.py 검증 (6개 테스트, 전부 통과)
+│
+├── notebooks/                   🔬 그래프 그려보는 실험 공간
+│   ├── README.md                ✅ 노트북 작성 규칙 설명
+│   └── 00_rc_nyquist.ipynb      ✅ 나이퀴스트 반원 시뮬레이션 (실행결과 포함)
+│
+└── simulink/                    🔲 W8에서 쓸 MIL 검증용 (아직 비어있음)
+    └── README.md                ✅ 계획 설명만 있음
 ```
+
+### 지금 당장 봐야 할 파일 셋만 고르면
+
+처음이라 뭐부터 볼지 모르겠다면, 아래 세 개만 먼저 보시면 됩니다.
+
+1. **`docs/START_HERE.md`** — 전체를 어떤 순서로 읽어야 하는지
+2. **`docs/02_theory/W1_electrochemistry_ecm.md`** — 지금까지 나온 이론의 핵심
+3. **`src/models/ecm.py`** + **`tests/test_ecm.py`** — 실제로 돌아가는 코드와 그 검증
+
+### `🔲`가 왜 이렇게 많은가
+
+이 프로젝트는 8주 커리큘럼 중 **W3까지** 진행된 상태입니다(로드맵 표
+참고). W4 이후에 해당하는 폴더·문서는 **"나중에 여기에 뭘 넣을지"를
+미리 정해서 뼈대만 만들어둔 것**입니다. 빈 폴더가 있다는 건 실수가
+아니라, 앞으로 채워나갈 계획이 이미 구조에 반영되어 있다는 뜻입니다.
 
 ## 실행 환경
 
@@ -75,6 +142,20 @@ python -m venv venv
 source venv/bin/activate          # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
+
+## 코드를 처음 보실 때
+
+이 저장소의 코드(`src/`, `tests/`)를 처음 여신다면, 한 줄씩 다 읽으려
+하지 않아도 됩니다. 아래 순서로 "구조"만 먼저 파악하는 걸 권합니다.
+
+1. 파일 안에 `class`가 몇 개 있는지 (몇 개의 "물건"이 정의되어 있나)
+2. 각 `class` 안에 `def`가 몇 개 있는지 (그 물건이 할 수 있는 일이 몇 개인가)
+3. 가장 중요해 보이는 함수 하나를 골라 입력·출력만 먼저 확인
+4. 계산 본문(수식이 있는 줄)은 필요할 때만 연다
+
+`ecm.py`의 경우, `output_voltage` 함수의 마지막 줄이
+`docs/02_theory/W1_electrochemistry_ecm.md`의 단자전압 공식과 그대로
+대응됩니다 — 코드가 특별한 게 아니라 이론을 그대로 옮겨놓은 것입니다.
 
 ## AI 도구 사용에 대해
 
