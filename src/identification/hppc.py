@@ -154,6 +154,8 @@ def extract_hppc_parameters(
     pulse_index: int = 0,
     relaxation_fraction: float = 0.9,
     initial_guess: Optional[dict] = None,
+    pulse_edges: Optional[list] = None,
+    edge_threshold: float = 1e-6,
 ) -> HPPCFitResult:
     """
     하나의 HPPC 펄스 데이터에서 R0, R1, C1을 한 번에 추출한다.
@@ -161,11 +163,23 @@ def extract_hppc_parameters(
     Parameters
     ----------
     time_s, voltage, current_A : 균일 샘플링된 전체 시계열
-    pulse_index : find_pulse_edges가 찾은 여러 펄스 중 몇 번째를 쓸지
+    pulse_index : pulse_edges 목록 중 몇 번째를 쓸지
     relaxation_fraction : 펄스 종료 후 휴지 구간 중 앞부분 몇 %를
         완화곡선 피팅에 쓸지 (뒤쪽은 노이즈 대비 신호가 작아 덜 신뢰함)
+    pulse_edges : 이미 find_pulse_edges로 찾아둔 펄스 목록. **반드시 넘길 것**.
+        호출하는 쪽(예: extract_soc_table.py)이 특정 threshold로 찾은
+        목록의 "몇 번째"를 pulse_index로 지정하는데, 이 함수가 예전처럼
+        내부에서 다른 threshold로 펄스를 다시 찾으면 번호가 서로 다른
+        펄스를 가리키게 되는 심각한 불일치가 생긴다. 실측 데이터에서
+        실제로 확인된 버그다 - PAU 구간의 부동소수점 잔류값(예: -3e-5A)이
+        threshold=1e-6에서는 "펄스"로 잘못 잡혀 이후 모든 펄스 번호가
+        밀렸고, 그 결과 R0/R1/C1이 매번 엉뚱한 펄스에서 계산되고 있었다.
+        하위호환을 위해 None이면 edge_threshold로 자체 탐색하되,
+        이 경우 호출하는 쪽과 threshold를 반드시 맞춰야 한다(위험하므로
+        가급적 pulse_edges를 명시적으로 넘길 것).
+    edge_threshold : pulse_edges가 None일 때만 사용하는 자체 탐색 threshold.
     """
-    edges = find_pulse_edges(current_A)
+    edges = pulse_edges if pulse_edges is not None else find_pulse_edges(current_A, threshold=edge_threshold)
     if pulse_index >= len(edges):
         raise ValueError(f"pulse_index={pulse_index}, 찾은 펄스 개수={len(edges)}")
 
