@@ -31,11 +31,29 @@
 | W0 | 기초 정비 (회로·제어·확률) | [W0_foundations](docs/02_theory/W0_foundations.md) | ✅ | ✅ (검증 노트북) |
 | W1 | 전기화학 → 등가회로(ECM) | [W1_electrochemistry_ecm](docs/02_theory/W1_electrochemistry_ecm.md) | ✅ | ✅ ([ecm.py](src/models/ecm.py)) |
 | W2 | EIS와 나이퀴스트 선도 | [W2_eis](docs/02_theory/W2_eis.md) | ✅ | ✅ ([노트북](notebooks/00_rc_nyquist.ipynb)) |
-| W3 | 파라미터 식별 (HPPC, RLS) | [W3_parameter_identification](docs/02_theory/W3_parameter_identification.md) | ✅ | 🔲 |
-| W4-5 | 상태추정 (EKF/UKF) + 검증 | [W4_kalman_filter](docs/02_theory/W4_kalman_filter.md) | 🔲 | 🔲 |
+| W3 | 파라미터 식별 (HPPC, RLS) | [W3_parameter_identification](docs/02_theory/W3_parameter_identification.md) | ✅ | ✅ (실측 Samsung 30T 데이터 적용) |
+| W4-5 | 상태추정 (EKF) + 검증 | [W4_kalman_filter](docs/02_theory/W4_kalman_filter.md) | 🔲 (문서 미작성) | ✅ ([ekf.py](src/estimators/ekf.py)) |
 | W6 | SOH (Dual EKF, ICA/DVA) | [W6_soh](docs/02_theory/W6_soh.md) | 🔲 | 🔲 |
 | W7 | SOP (제약 하 최적화) | [W7_sop](docs/02_theory/W7_sop.md) | 🔲 | 🔲 |
 | W8 | 제품화 (임베디드, 기능안전) | [W8_productionization](docs/02_theory/W8_productionization.md) | 🔲 | 🔲 |
+
+### 지금까지의 핵심 성과 (2026)
+
+Samsung INR21700-30T 실측 데이터(McMaster University 공개)로 등가회로
+파라미터(R0, R1, C1, OCV)를 추출하고, 확장 칼만필터로 실시간 SOC
+추정에 성공했습니다.
+
+```
+검증: 일부러 틀린 초기 SOC(50%, 진짜는 100%)에서 EKF 시작
+  -> 10분 만에 오차 0.17%p로 수렴, 최종 오차 0.02%p
+  -> 같은 조건 순수 쿨롱카운팅은 최종 17~50%p 오차 유지 (미보정)
+```
+
+과정에서 실측 데이터 특유의 버그 2건(펄스 인덱스 불일치, 이중 부호반전)을
+직접 발견·수정했습니다. 상세 내용은 [학습 로그](docs/00_learning_log.md)
+참고. **다만 이 검증은 모델이 만든 데이터로 모델을 다시 채점한
+"쌍둥이 실험"이라는 한계가 있어, 실측 드라이브 사이클(UDDS 등)로
+교차검증하는 것이 다음 과제입니다** ([한계](docs/04_limitations.md) 참고).
 
 ## 데이터
 
@@ -74,13 +92,16 @@ battery-sox-engine/
 │   │   ├── W7_sop.md                      🔲 SOP (목차만 있음)
 │   │   └── W8_productionization.md        🔲 제품화 (목차만 있음)
 │   │
-│   └── 03_results/              📊 결과 그림 저장 (지금은 안내문만)
-│       └── README.md            ✅ 그림 채워나갈 방식 설명
+│   └── 03_results/              📊 결과 그림
+│       ├── README.md            ✅ 그림 채워나가는 방식 설명
+│       └── ocv_curve_25degc.png ✅ OCV(SOC) + 히스테리시스 그래프
 │
 ├── data/                        🗄️ 실험 데이터 (원본 파일은 안 올림)
 │   ├── README.md                ✅ 데이터셋 구조·출처·다운로드 방법
-│   ├── raw/                     🔲 원본 다운로드 위치 (비어있음, .gitkeep만)
-│   └── processed/               🔲 전처리 결과 저장 위치 (비어있음)
+│   ├── raw/                     ✅ Samsung 30T 실측 원본 (git 추적 제외)
+│   └── processed/               ✅ 추출 결과 표
+│       ├── 25degC_hppc_params.csv   ✅ SOC별 R0/R1/C1 (139개 펄스)
+│       └── 25degC_ocv_curve.csv     ✅ OCV(SOC) 곡선
 │
 ├── src/                         🔧 실제로 동작하는 코드
 │   ├── README.md                ✅ 이 폴더 전체의 설계 원칙 설명
@@ -88,19 +109,24 @@ battery-sox-engine/
 │   │
 │   ├── models/                  ✅ 배터리를 회로로 표현하는 코드
 │   │   ├── README.md            ✅ 무엇을 담을 폴더인지 설명
+│   │   ├── ecm.py               ✅ 2RC+히스테리시스 ECM (고정 파라미터)
+│   │   └── dynamic_ecm.py       ✅ SOC별 실시간 파라미터 갱신 시뮬레이터
+│   │
+│   ├── identification/          ✅ 실측 데이터에서 파라미터 뽑는 코드
+│   │   ├── README.md            ✅ 계획 설명
+│   │   ├── samsung_loader.py    ✅ Samsung 30T CSV 로더 (부호반전 포함)
+│   │   ├── hppc.py              ✅ HPPC 펄스 -> R0/R1/C1 추출
+│   │   ├── extract_soc_table.py ✅ SOC별 파라미터 표 자동 생성
+│   │   ├── extract_ocv_curve.py ✅ C20 데이터 -> OCV(SOC) 곡선
+│   │   ├── plot_ocv_curve.py    ✅ OCV 곡선 시각화
+│   │   └── parameter_lookup.py  ✅ 표 -> "SOC 넣으면 값 반환" 함수 포장
+│   │
+│   ├── estimators/              ✅ 실시간 SOC 추정 코드
+│   │   ├── README.md            ✅ 계획 설명
 │   │   ├── __init__.py          ✅ (빈 파일)
-│   │   └── ecm.py               ✅ 2RC+히스테리시스 ECM 시뮬레이터 (완성)
+│   │   └── ekf.py               ✅ 확장 칼만필터 — 실시간 SOC 추정 성공
 │   │
-│   ├── identification/          🔲 파라미터 뽑아내는 코드 — 다음 작업 대상
-│   │   ├── README.md            ✅ 계획 설명만 있음
-│   │   └── __init__.py          ✅ (빈 파일)
-│   │       # 앞으로 여기에 hppc.py, rls.py가 추가될 예정
-│   │
-│   ├── estimators/              🔲 실시간 SOC 추정 코드 (W4-5에서 작업)
-│   │   ├── README.md            ✅ 계획 설명만 있음
-│   │   └── __init__.py          ✅ (빈 파일)
-│   │
-│   ├── validation/               🔲 필터 검증 코드 (W4-5에서 작업)
+│   ├── validation/               🔲 NIS 등 정식 통계 검증 (다음 과제)
 │   │   ├── README.md            ✅ 계획 설명만 있음
 │   │   └── __init__.py          ✅ (빈 파일)
 │   │
@@ -125,15 +151,16 @@ battery-sox-engine/
 처음이라 뭐부터 볼지 모르겠다면, 아래 세 개만 먼저 보시면 됩니다.
 
 1. **`docs/START_HERE.md`** — 전체를 어떤 순서로 읽어야 하는지
-2. **`docs/02_theory/W1_electrochemistry_ecm.md`** — 지금까지 나온 이론의 핵심
-3. **`src/models/ecm.py`** + **`tests/test_ecm.py`** — 실제로 돌아가는 코드와 그 검증
+2. **`docs/00_learning_log.md`** — 실제로 겪은 버그와 해결 과정 (가장 서사적인 문서)
+3. **`src/estimators/ekf.py`** — 최종 결과물: 실측 데이터 기반 실시간 SOC 추정기
 
-### `🔲`가 왜 이렇게 많은가
+### `🔲`가 왜 아직 남아있는가
 
-이 프로젝트는 8주 커리큘럼 중 **W3까지** 진행된 상태입니다(로드맵 표
-참고). W4 이후에 해당하는 폴더·문서는 **"나중에 여기에 뭘 넣을지"를
-미리 정해서 뼈대만 만들어둔 것**입니다. 빈 폴더가 있다는 건 실수가
-아니라, 앞으로 채워나갈 계획이 이미 구조에 반영되어 있다는 뜻입니다.
+W0~W5(칼만필터까지)는 이론과 구현이 완료됐습니다. W6(SOH)~W8(제품화)은
+아직 손대지 않았는데, **"핵심 경로"(W0~W5)와 "여유 있으면 하는 것"
+(W6~W8)을 의도적으로 나눠서 진행**했기 때문입니다. 이 프로젝트가
+증명하려던 핵심 — 실측 데이터에서 파라미터를 뽑아 칼만필터로 SOC를
+추정하는 것 — 은 이미 W5에서 완결됐습니다.
 
 ## 실행 환경
 
